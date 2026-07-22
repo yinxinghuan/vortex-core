@@ -1,6 +1,6 @@
 const COPY = {
-    zh: { idle: '按住风暴', charging: '继续按住', full: '松手点燃', release: '风暴已点亮', recover: '正在封存' },
-    en: { idle: 'HOLD THE STORM', charging: 'KEEP HOLDING', full: 'RELEASE TO IGNITE', release: 'STORM IGNITED', recover: 'SEALING THE CORE' },
+    zh: { gesture: '双指按住涡核' },
+    en: { gesture: 'TWO FINGERS ON THE CORE' },
 }
 
 function detectLocale() {
@@ -48,6 +48,9 @@ export default class VortexCoreExperience {
         this.ringCircle = this.ring.querySelector( 'circle' )
         this.state = 'loading'
         this.pointerId = null
+        this.touchPoints = new Map()
+        this.effectTouchIds = new Set()
+        this.defaultTwoTouchAction = null
         this.synthetic = false
         this.reduced = matchMedia( '(prefers-reduced-motion: reduce)' ).matches
         this.tone = new VortexTone()
@@ -61,32 +64,25 @@ export default class VortexCoreExperience {
         const world = this.experience.worlds.mainWorld
         this.galaxy = world.galaxy
         this.sphere = world.sphere
-        world.camera.controls.enabled = false
+        this.controls = world.camera.controls
+        this.controls.enabled = true
+        this.defaultTwoTouchAction = this.controls.touches.TWO
         this.original = { radius: 1, speed: .1, frequency: 1.4, emission: .4, dispersion: 5 }
         this.chargeTarget = { radius: 1.82, speed: .025, frequency: 1.54, emission: .14, dispersion: 5.5 }
         this.releaseTarget = { radius: .94, speed: .38, frequency: 1.36, emission: .58, dispersion: 5.6 }
         this.bind()
         this.setState( 'idle' )
         this.raf = requestAnimationFrame( now => this.update( now ) )
-        if ( !this.reduced ) this.demoTimer = setTimeout( () => this.begin( true ), 1400 )
     }
 
     bind() {
-        window.addEventListener( 'pointerdown', event => {
-            if ( event.button !== 0 || this.state !== 'idle' ) return
-            this.cancelDemo()
-            this.pointerId = event.pointerId
-            this.tone.unlock()
-            this.tone.play( 58, 46, .12, 'sine', .012 )
-            this.begin( false )
-        } )
+        window.addEventListener( 'pointerdown', event => this.onTouchDown( event ), { capture: true } )
+        window.addEventListener( 'pointermove', event => this.onTouchMove( event ), { capture: true } )
         const end = event => {
-            if ( event.pointerId !== this.pointerId ) return
-            this.pointerId = null
-            this.release()
+            if ( event.pointerType === 'touch' ) this.onTouchEnd( event )
         }
-        window.addEventListener( 'pointerup', end )
-        window.addEventListener( 'pointercancel', end )
+        window.addEventListener( 'pointerup', end, { capture: true } )
+        window.addEventListener( 'pointercancel', end, { capture: true } )
         window.addEventListener( 'keydown', event => {
             if ( event.code !== 'Space' || event.repeat || this.state !== 'idle' ) return
             event.preventDefault()
@@ -104,10 +100,47 @@ export default class VortexCoreExperience {
         } )
     }
 
+    onTouchDown( event ) {
+        if ( event.pointerType !== 'touch' ) return
+        this.touchPoints.set( event.pointerId, { x: event.clientX, y: event.clientY } )
+        if ( this.touchPoints.size !== 2 || this.state !== 'idle' ) return
+
+        const radius = Math.min( innerWidth, innerHeight ) * .32
+        const points = [ ...this.touchPoints.values() ]
+        const onCore = points.every( point => Math.hypot( point.x - innerWidth * .5, point.y - innerHeight * .5 ) <= radius )
+        if ( !onCore ) return
+
+        this.controls.touches.TWO = -1
+        this.effectTouchIds = new Set( this.touchPoints.keys() )
+        this.pointerId = 'touch-pair'
+        this.tone.unlock()
+        this.tone.play( 58, 46, .12, 'sine', .012 )
+        this.begin( false )
+    }
+
+    onTouchMove( event ) {
+        if ( !this.touchPoints.has( event.pointerId ) ) return
+        this.touchPoints.set( event.pointerId, { x: event.clientX, y: event.clientY } )
+    }
+
+    onTouchEnd( event ) {
+        const wasEffectTouch = this.effectTouchIds.has( event.pointerId )
+        this.touchPoints.delete( event.pointerId )
+        if ( wasEffectTouch && this.pointerId === 'touch-pair' ) {
+            this.pointerId = null
+            this.release()
+        }
+        if ( this.touchPoints.size === 0 ) {
+            this.controls.touches.TWO = this.defaultTwoTouchAction
+            this.effectTouchIds.clear()
+        }
+    }
+
     begin( synthetic ) {
         if ( this.state !== 'idle' ) return
         this.synthetic = synthetic
         this.startedAt = performance.now()
+        if ( !synthetic ) this.hint.classList.add( 'is-discovered' )
         this.guide.classList.toggle( 'is-visible', synthetic )
         this.ring.classList.add( 'is-visible' )
         this.setState( 'charging' )
@@ -178,8 +211,7 @@ export default class VortexCoreExperience {
     setState( state ) {
         this.state = state
         document.documentElement.dataset.phase = state
-        const key = state === 'full' ? 'full' : state
-        this.hint.textContent = this.copy[ key ] || this.copy.idle
+        this.hint.textContent = this.copy.gesture
     }
 
     update( now ) {

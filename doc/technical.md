@@ -13,7 +13,7 @@
 - `src/Experience/Worlds/MainWorld/Sphere.js`：原作玻璃球 `MeshPhysicalNodeMaterial`。
 - `src/Experience/Worlds/MainWorld/Camera.js`：25° 相机与基线 OrbitControls。
 - `src/Experience/Worlds/MainWorld/Environment.js`：HDR 反射与灰蓝渐变背景。
-- `src/product-ui.js`：产品状态机、真实/幽灵输入、参数插值、双语提示和程序化音频。
+- `src/product-ui.js`：产品状态机、双指主体区命中、手势归属、参数插值、双语隐藏手势提示和程序化音频。
 - `src/preloader.js`：双模式预加载器；产品入口绘制无品牌涡核细环，baseline 保留上游三角动画。
 - `index.html`、`src/style.css`：Codrops 原界面、产品极简 HUD、Material 幽灵手指与响应式规则。
 - `static/`：原作 HDR、纹理和解码器；`_qa/ui/`：390×844 与 320×568 真实运行截图。
@@ -22,7 +22,7 @@
 
 `Experience` 在资源加载完成后创建 `Worlds`，并通过 `WebGPURenderer.setAnimationLoop()` 驱动原场景。`Galaxy.swirlTexture()` 以 TSL 计算时间偏移、对数旋转和五层 3D FBM，再把同一结果用于实例位置、颜色和 alpha 阈值；没有新增粒子系统。
 
-产品入口由 `product-ui.js` 管理 `idle → charging/full → release → recover → idle`。它只写入原 `radius/speed/frequency/emissionMultiplier` uniform 与玻璃 `dispersion` 属性。900 ms 蓄能、180 ms 释放和 1450 ms 恢复都在 rAF 中插值；幽灵手指调用同一 `begin()/release()`，因此引导画面与真实效果不会脱节。真实 Pointer/Space 手势才创建 AudioContext，自动演示静音。
+产品入口由 `product-ui.js` 管理 `idle → charging/full → release → recover → idle`。OrbitControls 始终开启，单指/鼠标保持旋转；仅当两个触点都从涡核主体区开始时，捕获阶段才临时接管双指，所有触点结束后恢复原 `touches.TWO`。它只写入原 uniform 与玻璃 `dispersion`，不自动演示；首次有效双指后提示淡出。
 
 语言优先读取 `localStorage.game_locale`，否则按浏览器语言选择 zh/en。`?baseline=1` 在 `Debug` 创建前决定模式：恢复原 Tweakpane、作者导航、TransformControls helper 和 OrbitControls；默认产品入口关闭这些调试元素。
 

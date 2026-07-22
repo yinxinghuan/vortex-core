@@ -316,6 +316,7 @@ main {
     text-shadow: 0 1px 7px #08090c;
     transition: opacity .18s;
 }
+.vc-hint.is-discovered { opacity: 0; }
 
 .vc-core-ring,
 .vc-guide {
