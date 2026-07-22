@@ -14,6 +14,7 @@
 - `src/Experience/Worlds/MainWorld/Camera.js`：25° 相机与基线 OrbitControls。
 - `src/Experience/Worlds/MainWorld/Environment.js`：HDR 反射与灰蓝渐变背景。
 - `src/product-ui.js`：产品状态机、真实/幽灵输入、参数插值、双语提示和程序化音频。
+- `src/preloader.js`：双模式预加载器；产品入口绘制无品牌涡核细环，baseline 保留上游三角动画。
 - `index.html`、`src/style.css`：Codrops 原界面、产品极简 HUD、Material 幽灵手指与响应式规则。
 - `static/`：原作 HDR、纹理和解码器；`_qa/ui/`：390×844 与 320×568 真实运行截图。
 
@@ -24,6 +25,8 @@
 产品入口由 `product-ui.js` 管理 `idle → charging/full → release → recover → idle`。它只写入原 `radius/speed/frequency/emissionMultiplier` uniform 与玻璃 `dispersion` 属性。900 ms 蓄能、180 ms 释放和 1450 ms 恢复都在 rAF 中插值；幽灵手指调用同一 `begin()/release()`，因此引导画面与真实效果不会脱节。真实 Pointer/Space 手势才创建 AudioContext，自动演示静音。
 
 语言优先读取 `localStorage.game_locale`，否则按浏览器语言选择 zh/en。`?baseline=1` 在 `Debug` 创建前决定模式：恢复原 Tweakpane、作者导航、TransformControls helper 和 OrbitControls；默认产品入口关闭这些调试元素。
+
+`preloader.js` 通过同一 `window.preloader.hidePreloader()` 合同接收资源就绪事件。默认模式只绘制两道 Canvas 圆弧和中心光点，不初始化星点或三角网格；`?baseline=1` 则走原作绘制分支。`?qa=loading` 仅用于视觉 QA，会固定 loading 不退场。
 
 ## 4. 扩展点
 

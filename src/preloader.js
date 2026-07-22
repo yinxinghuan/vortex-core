@@ -41,6 +41,8 @@ class Star {
 
 class Preloader {
     preloader = document.getElementById( 'preloader' );
+    baselineMode = new URLSearchParams( window.location.search ).get( 'baseline' ) === '1';
+    qaHold = new URLSearchParams( window.location.search ).get( 'qa' ) === 'loading';
 
     ctx = this.preloader.getContext( '2d' );
     cw = this.preloader.width;
@@ -78,7 +80,7 @@ class Preloader {
 
         this.init()
 
-        this.initStars()
+        if ( this.baselineMode ) this.initStars()
 
         window.requestAnimationFrame( this.animate );
     }
@@ -88,7 +90,7 @@ class Preloader {
 
         window.addEventListener( 'resize', () => {
             this.resize()
-            this.initStars()
+            if ( this.baselineMode ) this.initStars()
             this.resizeAction = true
         })
     }
@@ -125,23 +127,12 @@ class Preloader {
         this.ctx.globalCompositeOperation = 'source-over';
         this.ctx.fillRect( 0, 0, this.cw, this.ch );
 
-        // Создаем линейный градиент
-        const gradient = this.ctx.createLinearGradient( 0, 0, 0, this.ch );
-
-        // Добавляем цвета
-        gradient.addColorStop( 0, '#000000' ); // Черный цвет на начале
-        gradient.addColorStop( 1, '#5788fe' ); // Синий цвет на конце
-
-        // // Применяем градиент к заливке
-        // this.ctx.fillStyle = gradient;
-        //
-        // // Рисуем прямоугольник, заполняя весь холст
-        // this.ctx.fillRect( 0, 0, this.cw, this.ch );
-
-
-        this.drawStars();
-
-        this.drawTriangle()
+        if ( this.baselineMode ) {
+            this.drawStars();
+            this.drawTriangle()
+        } else {
+            this.drawProductLoader()
+        }
 
         this.triangleState += 3 * this.deltaTime;
 
@@ -154,6 +145,42 @@ class Preloader {
         //this.angle += 60 * this.deltaTime;
 
         requestAnimationFrame( this.animate );
+    }
+
+    drawProductLoader() {
+        const fade = 1 - this.animationState
+        const radius = Math.min( 29, Math.max( 23, this.ch * 0.036 ) )
+        const pulse = 0.72 + Math.sin( this.elapsed * 2.2 ) * 0.12
+
+        this.ctx.save()
+        this.ctx.translate( this.cw / 2, this.ch / 2 )
+        this.ctx.globalAlpha = fade
+
+        const glow = this.ctx.createRadialGradient( 0, 0, 0, 0, 0, radius * 2.9 )
+        glow.addColorStop( 0, `rgba(240, 195, 111, ${0.12 * pulse})` )
+        glow.addColorStop( 0.42, 'rgba(191, 137, 65, 0.035)' )
+        glow.addColorStop( 1, 'rgba(0, 0, 0, 0)' )
+        this.ctx.fillStyle = glow
+        this.ctx.fillRect( -radius * 3, -radius * 3, radius * 6, radius * 6 )
+
+        this.ctx.lineCap = 'round'
+        this.ctx.lineWidth = 1.15
+        this.ctx.strokeStyle = `rgba(246, 219, 169, ${0.72 * pulse})`
+        this.ctx.beginPath()
+        this.ctx.arc( 0, 0, radius, this.elapsed * 1.15, this.elapsed * 1.15 + Math.PI * 1.06 )
+        this.ctx.stroke()
+
+        this.ctx.lineWidth = 0.75
+        this.ctx.strokeStyle = 'rgba(128, 157, 178, 0.38)'
+        this.ctx.beginPath()
+        this.ctx.arc( 0, 0, radius * 0.68, -this.elapsed * 1.75, -this.elapsed * 1.75 + Math.PI * 0.72 )
+        this.ctx.stroke()
+
+        this.ctx.fillStyle = `rgba(255, 235, 195, ${0.48 + pulse * 0.26})`
+        this.ctx.beginPath()
+        this.ctx.arc( 0, 0, 1.4 + pulse * 0.55, 0, Math.PI * 2 )
+        this.ctx.fill()
+        this.ctx.restore()
     }
 
     drawTriangle() {
@@ -344,6 +371,7 @@ class Preloader {
     }
 
     hidePreloader() {
+        if ( this.qaHold ) return
         this.preloader.style.pointerEvents = 'none';
         clearInterval( this.animationInterval );
         this.animationState = 0;
