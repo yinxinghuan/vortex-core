@@ -58,6 +58,8 @@ export default class Galaxy extends Model {
         this.world = parameters.world
         this.camera = this.world.camera.instance
         this.scene = this.world.scene
+        this.performance = this.experience.performance
+        this.uniforms.size.value = this.performance.particleSize
 
         this.setModel()
         this.setDebug()
@@ -136,10 +138,13 @@ export default class Galaxy extends Model {
         const planeGeometry = this.planeGeometry = new THREE.PlaneGeometry(
             this.uniforms.uResolution.value.x,
             this.uniforms.uResolution.value.y,
-            512,
-            512
+            this.performance.segments,
+            this.performance.segments
         )
         planeGeometry.rotateX( -Math.PI * 0.5 )
+
+        if ( !this.performance.baseline ) return
+
         const material = new THREE.MeshBasicNodeMaterial( {
             wireframe: true,
             transparent: true,

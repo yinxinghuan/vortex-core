@@ -12,6 +12,7 @@ export default class Renderer {
         this.debug = this.experience.debug
         this.resources = this.experience.resources
         this.html = this.experience.html
+        this.performance = this.experience.performance
 
 
         this.setInstance()
@@ -34,7 +35,7 @@ export default class Renderer {
         this.instance = new THREE.WebGPURenderer( {
             canvas: this.canvas,
             //powerPreference: "high-performance",
-            antialias: true,
+            antialias: this.performance.antialias,
             //samples: 4,
             alpha: false,
             stencil: false,
@@ -49,11 +50,9 @@ export default class Renderer {
 
         this.instance.outputColorSpace = THREE.SRGBColorSpace
         this.instance.setSize( this.sizes.width, this.sizes.height )
-        this.instance.setPixelRatio( Math.min( this.sizes.pixelRatio, 2 ) )
+        this.instance.setPixelRatio( this.performance.pixelRatio )
 
         this.instance.setClearColor( this.clearColor, 1 )
-        this.instance.setSize( this.sizes.width, this.sizes.height )
-
         //this.instance.toneMapping = THREE.ACESFilmicToneMapping
     }
 
@@ -98,25 +97,25 @@ export default class Renderer {
 
     update() {
         if ( this.debug.active ) {
-            this.debugRender()
+            return this.debugRender()
         } else {
-            this.productionRender()
+            return this.productionRender()
         }
     }
 
     productionRender() {
-        this.instance.renderAsync( this.scene, this.camera )
+        return this.instance.renderAsync( this.scene, this.camera )
     }
 
     debugRender() {
-        this.instance.renderAsync( this.scene, this.camera )
+        return this.instance.renderAsync( this.scene, this.camera )
     }
 
     resize() {
         // Instance
         // console.log(this.sizes.width, this.sizes.height)
         this.instance.setSize( this.sizes.width, this.sizes.height )
-        this.instance.setPixelRatio( this.sizes.pixelRatio )
+        this.instance.setPixelRatio( this.performance.pixelRatio )
     }
 
     destroy() {

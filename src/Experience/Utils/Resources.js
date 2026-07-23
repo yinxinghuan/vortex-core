@@ -65,10 +65,10 @@ export default class Resources extends EventEmitter {
 
         // add DRACOLoader
         const dracoLoader = new DRACOLoader()
-        dracoLoader.setDecoderPath( '/draco/' )
+        dracoLoader.setDecoderPath( './draco/' )
 
         const ktx2Loader = new KTX2Loader();
-        ktx2Loader.setTranscoderPath( '/basis/' );
+        ktx2Loader.setTranscoderPath( './basis/' );
 
         this.loaders.gltfLoader.setDRACOLoader( dracoLoader )
         this.loaders.gltfLoader.setKTX2Loader( ktx2Loader );

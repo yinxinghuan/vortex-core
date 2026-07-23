@@ -1,4 +1,5 @@
 import EventEmitter from './EventEmitter.js'
+import performanceProfile from './PerformanceProfile.js'
 
 export default class Sizes extends EventEmitter {
 
@@ -19,21 +20,21 @@ export default class Sizes extends EventEmitter {
         Sizes._instance = this
 
         // Setup
-        this.pixelRatio = Math.min( window.devicePixelRatio, 2 )
+        this.pixelRatio = performanceProfile.pixelRatio
         this.width = window.innerWidth
         this.height = window.innerHeight
 
-        this.width_DPR = this.width * window.devicePixelRatio
-        this.height_DPR = this.height * window.devicePixelRatio
+        this.width_DPR = this.width * this.pixelRatio
+        this.height_DPR = this.height * this.pixelRatio
 
         // Resize event
         window.addEventListener( 'resize', () => {
-            this.pixelRatio = Math.min( window.devicePixelRatio, 2 )
+            this.pixelRatio = performanceProfile.pixelRatio
             this.width = window.innerWidth
             this.height = window.innerHeight
 
-            this.width_DPR = this.width * window.devicePixelRatio
-            this.height_DPR = this.height * window.devicePixelRatio
+            this.width_DPR = this.width * this.pixelRatio
+            this.height_DPR = this.height * this.pixelRatio
 
             this.trigger( 'resize' )
         } )

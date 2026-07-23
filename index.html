@@ -11,6 +11,25 @@
 <body>
     <canvas id="preloader" role="status" aria-label="Vortex Core loading"></canvas>
 
+<button class="vc-start" data-vc-start type="button" aria-label="Enter Vortex Core">
+    <span class="vc-start__scene" aria-hidden="true">
+        <span class="vc-start__glass"></span>
+        <span class="vc-start__haze"></span>
+        <span class="vc-start__orbit"></span>
+        <span class="vc-start__core"></span>
+        <span class="vc-start__star vc-start__star--one"></span>
+        <span class="vc-start__star vc-start__star--two"></span>
+        <span class="vc-start__star vc-start__star--three"></span>
+    </span>
+    <span class="vc-start__action">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="22"></circle>
+            <path d="M20 16.5 32 24 20 31.5Z"></path>
+        </svg>
+        <span data-vc-start-status>TAP TO AWAKEN</span>
+    </span>
+</button>
+
 <main>
     <header class="frame">
         <h1 class="frame__title">Procedural Vortex in Glass</h1>

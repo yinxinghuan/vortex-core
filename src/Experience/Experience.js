@@ -14,6 +14,7 @@ import gsap from "gsap";
 import MotionPathPlugin from "gsap/MotionPathPlugin";
 import State from './State.js'
 import PostProcess from './Utils/PostProcess.js'
+import performanceProfile from './Utils/PerformanceProfile.js'
 
 import { isMobile } from '@experience/Utils/Helpers/Global/isMobile';
 import Ui from "@experience/Ui/Ui.js";
@@ -47,6 +48,7 @@ export default class Experience extends EventEmitter {
         this.html.main = document.getElementsByTagName( "main" )[ 0 ]
 
         this.isMobile = isMobile.any()
+        this.performance = performanceProfile
 
         // Options
         this.canvas = _canvas
@@ -64,7 +66,10 @@ export default class Experience extends EventEmitter {
 
     init() {
         // Start Loading Resources
-        this.resources = new Resources( sources )
+        const activeSources = this.performance.baseline
+            ? sources
+            : sources.filter( source => source.name === 'hdriTexture' )
+        this.resources = new Resources( activeSources )
 
         // Setup
         this.timeline = gsap.timeline({
@@ -137,7 +142,7 @@ export default class Experience extends EventEmitter {
         if ( this.state.postprocessing ) {
             this.postProcess.update( this.time.delta )
         } else {
-            this.renderer.update( this.time.delta )
+            await this.renderer.update( this.time.delta )
         }
 
         if ( this.debug.active ) {
@@ -177,7 +182,45 @@ export default class Experience extends EventEmitter {
             this.resize()
         } )
 
-        this.renderer.instance.setAnimationLoop( async () => this.update() )
+        this.renderInFlight = false
+        this.renderedFrames = 0
+        this.lastRenderAt = 0
+        const minFrameMs = this.performance.targetFps > 0
+            ? 1000 / this.performance.targetFps
+            : 0
+
+        this.renderer.instance.setAnimationLoop( timestamp => {
+            if ( document.hidden || this.renderInFlight ) return
+            if ( minFrameMs && timestamp - this.lastRenderAt < minFrameMs - 1 ) return
+
+            const elapsed = timestamp - this.lastRenderAt
+            this.lastRenderAt = minFrameMs
+                ? timestamp - ( elapsed % minFrameMs )
+                : timestamp
+            this.renderInFlight = true
+            Promise.resolve( this.update() )
+                .then( () => { this.renderedFrames += 1 } )
+                .catch( error => console.error( 'Vortex Core render failed', error ) )
+                .finally( () => { this.renderInFlight = false } )
+        } )
+
+        document.addEventListener( 'visibilitychange', () => {
+            if ( !document.hidden ) {
+                this.lastRenderAt = performance.now() - minFrameMs
+                this.time.reset()
+            }
+        } )
+
+        window.__VORTEX_CORE_QA__ = {
+            getState: () => ( {
+                profile: this.performance,
+                appLoaded: this.appLoaded,
+                particleCount: this.worlds?.mainWorld?.galaxy?.particlesMesh?.count || 0,
+                renderedFrames: this.renderedFrames,
+                renderInFlight: this.renderInFlight,
+                pixelRatio: this.renderer.instance.getPixelRatio(),
+            } ),
+        }
     }
 
     setDefaultCode() {

@@ -50,6 +50,8 @@ export default class Camera {
         // this.controls.enableZoom = false;
 
 
+        if ( !this.experience.performance.baseline ) return
+
         this.transformControls = new TransformControls( this.instance, this.renderer.domElement );
         //this.transformControls.addEventListener( 'change', render );
         this.transformControls.addEventListener( 'dragging-changed', ( event ) => {
