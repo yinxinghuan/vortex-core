@@ -203,16 +203,12 @@ gizmo-helper:hover {
 }
 
 .vc-start__action svg {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     overflow: visible;
-    filter: drop-shadow(0 0 16px rgba(237,176,73,.34));
-}
-
-.vc-start__action circle {
-    fill: rgba(5,5,5,.3);
-    stroke: rgba(255,248,235,.74);
-    stroke-width: 1;
+    color: rgba(255,248,235,.78);
+    filter: drop-shadow(0 2px 8px #000) drop-shadow(0 0 14px rgba(237,176,73,.24));
+    animation: vc-start-ghost-tap 2.8s cubic-bezier(.4,0,.2,1) infinite;
 }
 
 .vc-start__action path { fill: currentColor; }
@@ -227,6 +223,11 @@ gizmo-helper:hover {
 @keyframes vc-start-pulse {
     from { opacity: .45; transform: scale(.92); }
     to { opacity: 1; transform: scale(1.04); }
+}
+
+@keyframes vc-start-ghost-tap {
+    0%, 58%, 100% { opacity: .66; transform: translateY(-3px) scale(.96); }
+    68%, 78% { opacity: 1; transform: translateY(2px) scale(1); }
 }
 
 @keyframes vc-core-awaken {
@@ -528,6 +529,7 @@ main {
     .vc-hint { bottom: max(54px, calc(env(safe-area-inset-bottom) + 22px)); font-size: 9px; }
 }
 @media (prefers-reduced-motion: reduce) {
+    .vc-start__action svg { animation: none; }
     .vc-guide { display: none; }
     .vc-core-ring { transition-duration: .08s; }
 }

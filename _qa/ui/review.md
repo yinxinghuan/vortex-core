@@ -2,7 +2,7 @@
 
 ## 证据
 
-- `perf-dormant-390x844.png`：点击前的抽象暗场封面，大面积留白、微弱玻璃弧与中心奇点；不请求海报。
+- `perf-dormant-390x844.png`：点击前的抽象暗场封面，大面积留白、微弱玻璃弧、中心奇点与系列统一的 Google Material `touch_app` 幽灵手指；不请求海报，也不再出现易被误读为视频的播放按钮。
 - `perf-medium-390x844.png`：Medium 档 103041 粒子、DPR 1.25、抗锯齿后的真实 WebGPU 画面。
 - `perf-dormant-320x568.png` / `perf-low-320x568.png`：窄屏休眠封面与 Low 档 50625 粒子画面。
 - `product-guide-390x844.png`：幽灵手指按压、真实涡旋收紧与提示同步。
